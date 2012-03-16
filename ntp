@@ -1,0 +1,2 @@
+#!/bin/sh
+/usr/bin/ntpclient -s -h 0.us.pool.ntp.org &>/dev/null

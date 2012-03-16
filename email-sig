@@ -1,0 +1,5 @@
+#!/bin/bash
+echo "<br/><br/>======================================================<br/>"
+echo "Christopher Hall<br/><a href=""mailto:dylix98@gmail.com"">dylix98@gmail.com</a><br/><a href=""http://plutonic.mine.nu/"">http://plutonic.mine.nu</a><br/>"
+echo "<br/><b>Random Quote</b><br/>"
+/usr/bin/fortune linux

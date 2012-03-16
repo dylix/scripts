@@ -1,0 +1,26 @@
+#!/bin/bash
+# EDIT THESE
+# Valid options for BROWSER can be elinks or lynx
+BROWSER="lynx"
+RES="$1"
+
+
+if [ -z "$1" ] && [ -z "$RES" ]; then
+	echo "Usage: vlad-dl.sh [widthXheight]"
+	echo "Valid choices: 800x600 1024x768 1152x864 1280x960 1280x1024 1400x1050 1600x1200 1920x1440"
+	exit
+fi
+#let LASTPAGE=$( $BROWSER -source "http://www.vladstudio.com/wallpapers/" | sed -r "s/<a href='\?start=([^<]+)<\/a> \&middot; <\/div>/\nLAST: \1\n/g" | grep ^LAST: | sed -r "s/^LAST: //g" | sed -r "s/([^<]+)\&amp;/\nLAST: \1\n/g" | grep ^LAST | sed -r "s/^LAST: //g" )+1
+LASTPAGE=30
+COUNTER=0
+while [  $COUNTER -lt $LASTPAGE ]; do
+	for i in $( $BROWSER -source "http://www.vladstudio.com/wallpapers/?start=$COUNTER&show=24" | sed -r "s/href=\"..\/wallpaper\/\?([^<]+)\"/\nURL: \1\n/g" | grep ^URL: | sed -r "s/^URL: //g" )
+	do
+		FILENAME="vladstudio_"$i"_"$RES".jpg"
+		if [ ! -e $FILENAME ]; then
+		wget "http://www.vladstudio.com/joy/"$i"/"$FILENAME
+		fi
+	done
+	let COUNTER=COUNTER+24
+done
+

@@ -1,0 +1,2 @@
+#!/bin/sh
+sh ~/scripts/forecast.sh | espeak --stdin -g 10 -s 160 -p 50 -v english-us --stdout | aplay

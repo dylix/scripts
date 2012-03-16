@@ -1,0 +1,3 @@
+#!/bin/sh
+mencoder -o YOUR_FINAL.avi -noidx -oac copy -ovc copy combo.avi
+mencoder -oac copy -ovc copy part1.avi part2.avi part3.avi -o WHOLE-THING.avi

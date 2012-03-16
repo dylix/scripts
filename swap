@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# will adjust the current swappiness of the kernel
+# based on the idea by Con Kolivas (http://kerneltrap.org/node/1044)
+total=$(grep MemTotal /proc/meminfo | awk '{ print $2 }')
+while [ true ]; do
+used=$(grep AnonPages /proc/meminfo | awk '{ print $2 }')
+result=$(echo $used \* 100 / $total | bc -q)
+#echo $result > /proc/sys/vm/swappiness
+echo $result
+sleep 1
+done

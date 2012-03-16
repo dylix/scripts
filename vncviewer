@@ -1,0 +1,4 @@
+#!/bin/bash
+ssh -t -L 5900:localhost:5900 192.168.1.111 'x11vnc -localhost -display :0'&
+sleep 2
+vncviewer localhost

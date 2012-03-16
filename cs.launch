@@ -1,0 +1,8 @@
+#metacity --replace &
+xfwm4 --replace &
+#cd ~/.wine/drive_c/Program\ Files/Valve/Steam && WINEDEBUG=-all wine steam -applaunch 240
+cd ~/.wine/drive_c/Program\ Files/Steam && WINEDEBUG=-all wine Steam.exe
+#compiz --replace ccp --loose-binding &
+compiz --replace &
+emerald --replace &
+#cd ~/.wine/drive_c/Program\ Files/Valve/Steam && ~/scripts/winefix Steam.exe

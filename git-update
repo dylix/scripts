@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#cd ~/scripts && git push origin master
+#cd ~/Documents/Projects/TimedTV && git push origin master
+#cd ~/Documents/Patches && git push origin master
+MYSEP="=============================\n"
+cd ~/scripts && echo -e $MYSEP$MYSEP `pwd`"\n"$MYSEP$MYSEP && git status
+cd ~/Documents/Projects/TimedTV && echo -e $MYSEP$MYSEP `pwd`"\n"$MYSEP$MYSEP  && git status
+cd ~/Documents/Patches && echo -e $MYSEP$MYSEP `pwd`"\n"$MYSEP$MYSEP && git status
+

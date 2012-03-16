@@ -1,0 +1,4 @@
+#!/bin/sh
+/usr/bin/mplayer -ao alsa -ac hwac3,hwdts "file://$1"
+#echo $1
+#echo "base=0xd0000000 size=0x10000000 type=write-combining" > /proc/mtrr

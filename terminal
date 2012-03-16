@@ -1,0 +1,3 @@
+#!/bin/bash
+FONT=kates
+aterm -tr -sh 50 +sb -fb $FONT -fn $FONT

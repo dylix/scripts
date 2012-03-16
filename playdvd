@@ -1,0 +1,2 @@
+#!/bin/sh
+mplayer dvd:// -ao alsa:device=spdif -ac hwac3

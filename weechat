@@ -1,0 +1,2 @@
+#!/bin/sh
+Terminal --geometry=129x62 --hide-menubar -e weechat-curses

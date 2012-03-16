@@ -1,0 +1,24 @@
+#!/bin/bash
+date=`date +%m.%d.%y-%H%M`;
+sspath="/mnt/dylix/public_html/screenshots";
+
+#convert $sspath/ss-$date.png $sspath/ss-$date.jpg
+echo "http://plutonic.mine.nu/~dylix/screenshots/ss-$date.jpg"
+echo "Screenshot successfully taken.."
+sleep 10
+exit
+#read -e EXIT
+
+#echo -n "Would you like to create a 100x75 size thumbnail? (yes or no): "
+#read -e THUMB
+#if [ "$THUMB" = "yes" ]; then
+#   convert $sspath/ss-$date.png -resize 100x75 $sspath/ss-$date-thumb.png
+#   echo "thumbnail created.."
+#fi
+
+#echo -n "Would you like to create a 341x256 size thumbnail? (yes or no): "
+#read -e BIGTHUMB
+#if [ "$BIGTHUMB" = "yes" ]; then
+#   convert $sspath/ss-$date.png -resize 341x256 $sspath/ss-$date-med.png
+#   echo "bigger thumbnail created.."
+#fi

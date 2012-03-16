@@ -1,0 +1,8 @@
+${voffset 0}${font Weather:size=40}y${font} ${voffset -35}${font Arial Black:size=20}[--datatype=HT]${font}
+${offset 130}${voffset -40}${font ConkyWeather:style=Bold:size=40}[--datatype=WF]${font}
+
+${offset -15}${voffset -10}${alignc 43}${font}[--datatype=DW --startday=0 --shortweekday] ${alignc 8}[--datatype=DW --startday=1 --shortweekday] ${alignc -29}[--datatype=DW --startday=2 --shortweekday] ${alignc -64}[--datatype=DW --startday=3 --shortweekday]${font}
+
+${voffset -10}${alignc 75}${font ConkyWeather:size=28}[--datatype=WF --startday=0 --endday=3 --spaces=1]${font}
+
+${voffset -12}${alignc 48}${font DejaVu Sans:size=7}[--startday=0 --datatype=HT --hideunits --centeredwidth=3]/[--datatype=LT --startday=0 --hideunits --centeredwidth=3] ${alignc -14}[--datatype=HT --startday=1 --hideunits --centeredwidth=3]/[--datatype=LT --startday=1 --hideunits --centeredwidth=3] ${alignc -40}[--datatype=HT --startday=2 --hideunits --centeredwidth=3]/[--datatype=LT --startday=2 --hideunits --centeredwidth=3] ${alignr 6}[--datatype=HT --startday=3 --hideunits --centeredwidth=3]/[--datatype=LT --startday=3 --hideunits --centeredwidth=3]${font}

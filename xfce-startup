@@ -1,0 +1,13 @@
+#!/bin/sh
+/usr/bin/numlockx &
+/usr/bin/devilspie &
+/usr/bin/pidgin &
+#/usr/bin/lomoco -g &
+/home/dylix/.dropbox-dist/dropboxd &
+/usr/bin/conky &
+#/usr/bin/conky -c ~/.conkyrc-fortune &
+#/usr/bin/guake &
+#xfwm4 --replace
+/home/dylix/scripts/irssi.sh &
+#/usr/bin/skype &
+#/usr/bin/compiz-manager --replace --loose-bindings &

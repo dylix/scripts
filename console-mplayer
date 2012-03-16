@@ -1,0 +1,1 @@
+mplayer -vo fbdev -vf scale=1280:1024 $1

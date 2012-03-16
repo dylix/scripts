@@ -1,0 +1,2 @@
+#!/bin/sh
+multitail -D -cS apache /mnt/www/thetruth/access_log

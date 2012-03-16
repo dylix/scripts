@@ -1,0 +1,9 @@
+#!/bin/bash
+
+monOffOn=`xset -q | grep Monitor | awk '{print $3}'`
+
+if [ "$monOffOn" = "On" ]; then
+	echo "unmute"
+else
+	echo "mute"
+fi

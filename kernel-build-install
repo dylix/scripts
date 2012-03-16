@@ -1,0 +1,6 @@
+#!/bin/sh
+make -j10
+make modules_install
+mount /boot
+cp arch/x86_64/boot/bzImage /boot/bzImage-`date +%m-%d-%Y`
+boot-update

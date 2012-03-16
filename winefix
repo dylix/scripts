@@ -1,0 +1,428 @@
+#!/bin/bash
+
+####
+# winefix - Wrapper script for Wine with fixes for several bugs and annoyances.
+#
+# Partly based on:
+#    podencoder
+#    winelauncher  
+#
+# Thanks to Mikey!
+####
+
+# Copyright (C) 2007, John Simpkins
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
+# 02110-1301  USA
+
+VERSION="0.9.1"
+
+# The nice level at which Wine applications and the Wineserver are run.
+####
+# Reccommended values are from -10 to 19:
+#  19 - increases application smoothness, especially in regards to sound, and provides
+#	a moderate performance increase in applications that rely mainly on GPU processing.
+# -10 - decreases application smoothness, but can greatly increase the performance
+#	of programs that rely mainly on CPU processing.
+####
+NICE=""
+
+# Set the below value to "1" if using Compiz Fusion and wish to use the "legacy
+# apps" workaround. The workaroud is enabled and then immediately disabled, as it's 
+# known to break the fullcreen modes of many applications.
+# Only the gconf backend is supported.
+COMPIZ_FIX="0"
+
+# If the above workaround is not sufficient, Compiz or Beryl can be automatically replaced
+# with another Window Manage whenever a Wine application is executed.
+####
+# Default Window Managers:
+#  Gnome - metacity
+#  Kde   - kwin
+#  Xfce  - xfwm4
+####
+WINDOW_MANAGER="xfwm4"
+
+# Set this to a resolution, such as "1024x768", to emulate a virtual desktop at the 
+# chosen resolution.
+#VIRT_DESKTOP="1280x1024"
+
+# Set the below value to "1" if extended error reporting and logging is desired.
+ERROR_LOGGING=""
+
+# Check to see if the passed WINEPREFIX exists. If not specified, set it to the default.
+if [ ! $WINEPREFIX ]
+then
+	WINEPREFIX=$HOME/.wine
+fi
+
+# Import winefixrc, id it exists.
+[ -r "$WINEPREFIX/.winefixrc" ] && . "$WINEPREFIX/.winefixrc"
+
+# Parse command-line options
+while getopts ":c:d:n:v:w:u:" options; do
+	case $options in
+	c) COMPIZ_FIX=1;;
+	d) ERROR_LOGGING=1;;
+	n) NICE=$OPTARG;;
+	v) VIRT_DESKTOP=$OPTARG;;
+	w) WINDOW_MANAGER=$OPTARG;;
+	u) cat <<EOF
+winefix $VERSION
+Copyright (C) 2007n, Jack Simpkins
+This program is free software.  You can redistribute it and/or modify it under
+the terms the GNU General Public License version 2 or, at your option,
+any later version published by the Free Software Foundation.  There is
+NO WARRANTY, to the extent permitted by law.
+EOF
+	exit 1;;
+	*) cat <<EOF
+Usage: winefix [OPTIONS] [WINECOMMAND] [WINEOPTIONS]
+
+WINECOMMAND can be in either DOS or UNIX format.
+
+All flags are optional
+  -c    Set to "1" to enable the "Legacy Apps" workaround in Compiz Fusion.
+	Only available for the gconf backend.
+  -d	Set to "1" to enable error reporting, as well as logging.
+	Set to "2" to enable reporting of ALL error messages. This is
+	mainly useful for error reports.
+  -n    The "nice" value that Wine applications are set to.
+	"19" generally decreases apllication or sound stuttering, while "-10"
+	can increase the performance of CPU intensive applications.
+  -u	Display this usage message.
+  -v	Set this to "1", or a resolution such as "1024x768", to create a virtual
+	desktop. This is equivalet to checking the "Emulate a virtual desktop"
+	option in winecfg, only on an application specific basis.
+  -w    Window Manager to use when a Wine application is running.
+
+Report bugs to <jack.simpkins@gmail.com>.
+EOF
+	exit 1;;
+	esac
+done
+shift $(($OPTIND - 1))
+
+#############
+# Functions #
+#############
+
+# Renice both application and wineserver.
+RENICE() {
+        sleep 3;
+	# Check if we're being reniced to less than zero.
+	if [ "$NICE" -lt 0 ]
+	then
+		ROOT=sudo
+	fi
+	for a in `pgrep $1`; do $ROOT renice $NICE -p $a > /dev/null; done
+        for a in `pgrep wineserver`; do $ROOT renice $NICE -p $a > /dev/null; done
+}
+
+REPLACE()
+# Execute Window Managers, and suppress output
+{
+	$1 --replace 2>/dev/null &
+	sleep 2
+}
+
+LOWERCASE()
+# Lowercase DOS drive letters. Needed for DOS to UNIX path conversion.
+# TODO: Implement this in a way that avoids breaking abnormal drive letters.
+{
+	echo "$@" | sed -e "s/A:/a:/" -e "s/B:/b:/" -e "s/C:/c:/" -e "s/D:/d:/" \
+	-e "s/E:/e:/" -e "s/F:/f:/" -e "s/G:/g:/" -e "s/H:/h:/" -e "s/I:/i:/" \
+	-e "s/J:/j:/" -e "s/K:/k:/" -e "s/L:/l:/" -e "s/M:/m:/" -e "s/N:/n:/" \
+	-e "s/O:/o:/" -e "s/P:/p:/" -e "s/Q:/q:/" -e "s/R:/r:/" -e "s/S:/s:/" \
+	-e "s/T:/t:/" -e "s/U:/u:/" -e "s/V:/v:/" -e "s/W:/w:/" -e "s/X:/X:/" \
+	-e "s/Y:/y:/" -e "s/Z:/z:/"
+}
+
+# If using a GUI, display only ten lines of errors. If there are more, display an option to
+# view the log file.
+DIE() {
+	if [ $GUI ]
+	then
+		zenity --error --title="$NAME" --text="Wine has crashed! \n\n$@"
+		if [ `less $WINEPREFIX/log/$NAME.log | grep -c .` -gt "10" ]
+		then
+			if zenity --question --text "There were too many errors to display. Would you like to view the error log?"
+			then
+				zenity --text-info --width 600 --height 600 --title="$WINEPREFIX/log/$NAME.log" --filename="$WINEPREFIX/log/$NAME.log"
+			fi
+		fi
+	else
+		echo -e "Wine has crashed! $@" | tr "\n" " " >/dev/stderr
+	fi
+}
+
+WARN() {
+	if [ $GUI ]
+	then
+		zenity --warning --title="$NAME" --text="Warning: \n\n$1"
+	else
+		echo -e "Warning: $1" | tr "\n" " " >/dev/stderr
+	fi
+	exit 1
+}
+
+ASK() {
+	if [ $GUI ]
+	then
+		zenity --question --text "$1"
+		return $?
+	else
+		echo -e "$1" | tr "\n" " "
+		read ANSWER
+		if [ $ANSWER == yes ]
+		then
+			return 0
+		else
+			return 1
+		fi
+	fi
+}
+
+##################
+# Error checking #
+##################
+
+# Check to see if we were started without arguments
+if [ $# -eq 1 -a "$1" = "" ] || [ $# -eq 0 ]
+then
+	echo "Winefix called without arguments. For usage information, run winefix -u"
+	exit 1
+fi
+
+# Are we being run from a terminal?
+if tty -s
+then
+	:
+else
+	GUI=1
+fi
+
+# Is zenity installed?
+if [ $GUI ]
+then
+	[ -z "$(which zenity)" ] && GUI=""
+#	echo "Warning: \"zenity\" is not installed. Error dialogs will not be displayed"
+fi
+
+# Unless error logging is enabled or WINEDEBUG has been set, only show messages of the 
+# "err" class.
+if [ ! $WINEDEBUG ]
+then
+	if [ ! $ERROR_LOGGING ]
+	then
+		WINEDEBUG="err+all"
+	elif [ "$ERROR_LOGGING" == "2" ]
+	then
+		WINEDEBUG="+all"
+	fi
+fi
+
+#################
+# Path handling #
+#################
+
+# Check if the Wine drive pointed to exists.
+if [ ! -e "$WINEPREFIX" ]
+then
+	WARN "WINEPREFIX: \"$WINEPREFIX\" doesn't exist!"
+fi
+
+# The characters matched in a path to determine if it is DOS formatted.
+MATCH=:\
+
+# Isolate Wine application command line arguments.
+WINEARGS=`echo "$@" | grep -o -i "\(exe\|bin\|msi\|lnk\) .*" | grep -o " .*"`
+WINECOMMAND=`echo "$@" | grep -o -i ".*\(exe\|bin\|msi\|lnk\)"`
+
+# Test if a path is symlinked, and if so, convert it into something Wine can use.
+# Wine likes symlinks little, if at all.
+if [[ -L "$@" ]]
+then
+	SYMLINK=`readlink "$WINECOMMAND"`
+	LOCATION=`dirname "$SYMLINK"`
+	NAME=`basename "$SYMLINK"`
+# Test if a path is DOS formatted, and if not in concatenated "~" format, convert to the UNIX
+# equivalent. "~" formatted paths are passed directly to Wine.
+elif echo "$@" | grep -q "$MATCH"
+then
+	if echo "$@" | grep -q "~"
+	then
+		LOCATION=`.`
+		NAME="$@"
+	else
+		DOSPATH=$(echo "$WINECOMMAND" | sed "s/\\\/\//g")
+		DOSDIR=`LOWERCASE \`dirname "$DOSPATH"\``
+		LOCATION=""$WINEPREFIX"/dosdevices/$DOSDIR"
+		NAME=`basename "$DOSPATH"`
+	fi
+
+# If none of the above are true, the path is assumed to be formatted correctly.
+else
+	LOCATION=`dirname "$WINECOMMAND"`
+	NAME=`basename "$WINECOMMAND"`
+fi
+
+######################
+# Extension handlers #
+######################
+
+# Check if we're running something with a .msi extension.
+if echo "$NAME" | grep -q -i ".msi"
+then
+	MSI="start"
+fi
+
+# If we're being passed a .lnk, ask if a menu entry should be made.
+if echo "$@" | grep -q ".lnk"
+then
+	if ASK "Create a menu entry for \"$NAME\" ?"
+	then
+		wine winemenubuilder "$@" || WARN "A menu entry could not be created"
+	fi
+	exit 1
+fi
+
+###################
+# Execution phase #
+###################
+
+if [ $VIRT_DESKTOP ]
+then
+	VIRT_DESKTOP="explorer /desktop=$NAME,$VIRT_DESKTOP"
+fi
+
+# Change to an application's directory and then run Wine; many programs look for assets in
+# the folder that they were executed from, and break outright if this is not done.
+cd "$LOCATION" 2>/dev/null || WARN "The path \"$LOCATION\" doesn't seem to exist!"
+
+# If a program is being reniced to less than zero, prompt for a password.
+if [ $NICE ] && [ $NICE -lt 0 ]
+then
+	if [ $GUI ]
+	then
+		gksudo -D "renice $NICE" "sudo -v"
+		wait
+	else
+		`sudo -v`
+		wait
+	fi	
+fi
+
+# Determine if either Compiz or Beryl are in use so that they can be reinstated later.
+if [ "`pidof compiz.real`" ]
+then
+	COMPOSITE_MANAGER="compiz"
+elif [ "`pidof beryl`" ]
+then
+	COMPOSITE_MANAGER="beryl"
+fi
+
+# Enable Window Manager workarounds
+[ $COMPIZ_FIX ] && ( gconftool-2 -t bool -s /apps/compiz/plugins/workarounds/allscreens/options/legacy_fullscreen true )
+
+# Don't run a Window Manager if it's already in use
+if [ $WINDOW_MANAGER ]
+then
+	if [ "`pidof $WINDOW_MANAGER`" ]
+	then
+		echo "$WINDOW_MANAGER is already running, skipping"
+	else
+		REPLACE $WINDOW_MANAGER
+	fi
+fi
+
+# Save the original desktop resolution and refresh rate in case it needs to be restored later.
+# Don't try to use xrandr if Compiz or Beryl are running.
+if [ ! $COMPOSITE_MANAGER ] || [ $WINDOW_MANAGER ]
+then
+	if  [ "`echo \`xrandr -v\` | grep "1.2"`" ]
+	then
+		ORIG_RES=`echo \`xrandr\` | tr " " "\n" | grep -B 1 ".*\*" | sed 's/*//'| sed -n -e '1p'`
+		ORIG_REF=`echo \`xrandr\` | tr " " "\n" | grep -B 1 ".*\*" | sed 's/*//'| sed -n -e '2p'`
+	elif [ "`echo \`xrandr -v\` | grep "1."`" ]
+	then
+		ORIG_RES=`echo \`xrandr\` | tr " " "\n" | grep "\*." | sed 's/*//' | sed -n -e '1p'`
+		ORIG_REF=`echo \`xrandr\` | tr " " "\n" | grep "\*." | sed 's/*//' | sed -n -e '2p'`
+	else
+		echo "Couldn't detect xrandr version. Resolution fixing disabled."
+	fi
+fi
+
+if [ ! -e "$WINEPREFIX/log/$NAME.log" ]
+then
+	# Create the log directory if it doesn't already exist.
+	if [ ! -e "$WINEPREFIX/log" ]
+	then
+		mkdir "$WINEPREFIX/log"
+	fi
+	# likewise an application log if one doesn't already exist.
+	touch "$WINEPREFIX/log/$NAME.log"
+fi
+
+if [ $NICE ]
+then
+	RENICE $NAME &
+fi
+
+# Execute Wine.
+env WINEPREFIX=$WINEPREFIX WINEDEBUG="$WINEDEBUG" wine $VIRT_DESKTOP $MSI "$NAME"$WINEARGS 2>"$WINEPREFIX/log/$NAME.log" ||
+if [ $ERROR_LOGGING ]
+then
+	DIE "Errors: `tail "$WINEPREFIX"/log/"$NAME".log`"
+else
+	DIE "To enable full error reporting, please run winefix with the flag \n\"-d 1\"\n\nErrors: `tail "$WINEPREFIX"/log/"$NAME".log`"
+fi
+
+###########
+# Cleanup #
+###########
+
+# If log file is empty, remove it
+if [ ! -s "$WINEPREFIX/log/$NAME.log" ]
+then
+	rm -f "$WINEPREFIX/log/$NAME.log"
+fi
+
+# If Wine changed the desktop resolution, make sure it was properly changed back.
+if [ "$ORIG_RES" ]
+then
+	sleep 2
+	if  [ "`echo \`xrandr -v\` | grep "1.2"`" ]
+	then
+		NEW_RES=`echo \`xrandr\` | tr " " "\n" | grep -B 1 ".*\*" | sed 's/*//'| sed -n -e '1p'`
+		NEW_REF=`echo \`xrandr\` | tr " " "\n" | grep -B 1 ".*\*" | sed 's/*//'| sed -n -e '2p'`
+	else
+		NEW_RES=`echo \`xrandr\` | tr " " "\n" | grep "\*." | sed 's/*//' | sed -n -e '1p'`
+		NEW_REF=`echo \`xrandr\` | tr " " "\n" | grep "\*." | sed 's/*//' | sed -n -e '2p'`
+	fi
+	if [ "$NEW_RES" != "$ORIG_RES" ] || [ "$NEW_REF" != "$ORIG_REF" ]
+	then
+		xrandr -s $ORIG_RES -r $ORIG_REF
+		sleep 1
+	fi
+fi
+
+# Disable Window Manager workarounds
+[ $COMPIZ_FIX ] && ( gconftool-2 -t bool -s /apps/compiz/plugins/workarounds/allscreens/options/legacy_fullscreen false )
+if [ $WINDOW_MANAGER ] && [ $COMPOSITE_MANAGER ]
+then
+	REPLACE $COMPOSITE_MANAGER &
+	wait
+fi

@@ -1,0 +1,3 @@
+#!/bin/sh
+cd /home/dylix/.wine/drive_c/Program\ Files/Maxis/SimCity\ 4\ Deluxe/Apps/
+taskset -c 1 wine simcity\ 4.exe -d:software -intro:off

@@ -1,0 +1,8 @@
+#!/bin/sh
+#Terminal --command="ssh 10.1.1.1 'sudo eix-sync'" 
+#Terminal --tab --command="ssh 10.1.1.5 'sudo eix-sync'"
+#Terminal --tab --command="sudo eix-sync"
+
+#Terminal --command="ssh 10.1.1.1 'read'" --tab --command="ssh 10.1.1.5 'read'" --tab --command="read"
+
+Terminal --command="ssh 192.168.1.9 sudo eix-sync && echo Finished" -H --tab --command="sudo eix-sync && echo Finished" -H 
