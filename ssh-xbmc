@@ -1,0 +1,2 @@
+#/bin/sh
+Terminal --command 'ssh 192.168.0.30'

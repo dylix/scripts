@@ -46,4 +46,4 @@
         tput reset
         clear
 
-} > /dev/pty$1
+} > /dev/pts/$1

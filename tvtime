@@ -1,2 +1,2 @@
 #!/bin/sh
-/usr/bin/tvtime -d /dev/video0
+/usr/bin/tvtime -d /dev/video1

@@ -1,2 +1,3 @@
 #!/bin/sh
-Terminal --geometry=129x62 --hide-menubar -e weechat-curses
+#Terminal --geometry=135x66 --title=weechat --hide-menubar -e weechat-curses
+gnome-terminal --hide-menubar -t weechat --geometry=135x67 -e weechat-curses

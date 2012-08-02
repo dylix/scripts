@@ -2,11 +2,16 @@
 date=`date +%m.%d.%y-%H%M`;
 sspath="/mnt/dylix/public_html/screenshots";
 #composite -gravity southeast /mnt/dylix/public_html/screenshots/deadarea2.png /mnt/dylix/public_html/screenshots/ss-$date.jpg /mnt/dylix/public_html/screenshots/ss-$date.jpg
+
+composite -gravity west $sspath/ss-$date.png $sspath/blank.png $sspath/ss-$date.png
+
+// 6900 x 1080
+
 echo "http://dylix.dyndns.org/screenshots/ss-$date.jpg" # | xclip
 #echo `/home/dylix/scripts/ompload -n -u /mnt/dylix/public_html/screenshots/ss-$date.jpg`
 echo "Screenshot successfully taken.."
-sleep 10
-exit
+sleep 1000
+#exit
 
 ## Old thumbnail generator
 ##
